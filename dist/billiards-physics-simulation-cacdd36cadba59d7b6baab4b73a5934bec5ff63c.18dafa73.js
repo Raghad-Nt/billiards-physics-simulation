@@ -207,11 +207,11 @@
       });
     }
   }
-})({"lprZd":[function(require,module,exports,__globalThis) {
+})({"7ttJH":[function(require,module,exports,__globalThis) {
 var global = arguments[3];
 var HMR_HOST = null;
 var HMR_PORT = null;
-var HMR_SERVER_PORT = 1234;
+var HMR_SERVER_PORT = 60225;
 var HMR_SECURE = false;
 var HMR_ENV_HASH = "439701173a9199ea";
 var HMR_USE_SSE = false;
@@ -1005,7 +1005,7 @@ window.addEventListener('resize', ()=>{
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-},{"three":"dsoTF","three/examples/jsm/controls/OrbitControls.js":"45ipX","./physicsCore1.js":"dENo9","./physics.js":"3wFbO","url:../models/ball01.jpg":"2njJf","url:../models/ball02.jpg":"aC5Gx","url:../models/ball03.jpg":"5zAFA","url:../models/ball04.jpg":"5rMIs","url:../models/ball05.jpg":"e84y6","url:../models/ball06.jpg":"97wox","url:../models/ball07.jpg":"lSfWJ","url:../models/ball08.jpg":"2G2Wk","url:../models/ball09.jpg":"fC3k1","url:../models/ball10.jpg":"3KnSs","url:../models/ball11.jpg":"iDLby","url:../models/ball12.jpg":"dWuSs","url:../models/ball13.jpg":"h4uX5","url:../models/ball14.jpg":"gJQcr","url:../models/ball15.jpg":"53cuP","@parcel/transformer-js/src/esmodule-helpers.js":"e5pyA"}],"dsoTF":[function(require,module,exports,__globalThis) {
+},{"three":"dsoTF","three/examples/jsm/controls/OrbitControls.js":"45ipX","./physicsCore1.js":"dENo9","./physics.js":"3wFbO","url:../models/ball01.jpg":"9RKaH","url:../models/ball02.jpg":"aYcrB","url:../models/ball03.jpg":"1Dybh","url:../models/ball04.jpg":"dDeix","url:../models/ball05.jpg":"cWz5O","url:../models/ball06.jpg":"bwzYy","url:../models/ball07.jpg":"bejuT","url:../models/ball08.jpg":"1Ybkp","url:../models/ball09.jpg":"1VWla","url:../models/ball10.jpg":"4u03n","url:../models/ball11.jpg":"gy9vZ","url:../models/ball12.jpg":"hcYCq","url:../models/ball13.jpg":"7JsK7","url:../models/ball14.jpg":"i9FZp","url:../models/ball15.jpg":"gvpKX","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT"}],"dsoTF":[function(require,module,exports,__globalThis) {
 /**
  * @license
  * Copyright 2010-2026 Three.js Authors
@@ -13235,7 +13235,7 @@ function getDFGLUT() {
     }
 }
 
-},{"./three.core.js":"4TvK1","@parcel/transformer-js/src/esmodule-helpers.js":"e5pyA"}],"4TvK1":[function(require,module,exports,__globalThis) {
+},{"./three.core.js":"4TvK1","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT"}],"4TvK1":[function(require,module,exports,__globalThis) {
 /**
  * @license
  * Copyright 2010-2026 Three.js Authors
@@ -53515,7 +53515,7 @@ if (typeof window !== 'undefined') {
     else window.__THREE__ = REVISION;
 }
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"e5pyA"}],"e5pyA":[function(require,module,exports,__globalThis) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT"}],"jnFvT":[function(require,module,exports,__globalThis) {
 exports.interopDefault = function(a) {
     return a && a.__esModule ? a : {
         default: a
@@ -54682,7 +54682,7 @@ function interceptControlUp(event) {
     }
 }
 
-},{"three":"dsoTF","@parcel/transformer-js/src/esmodule-helpers.js":"e5pyA"}],"dENo9":[function(require,module,exports,__globalThis) {
+},{"three":"dsoTF","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT"}],"dENo9":[function(require,module,exports,__globalThis) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 // ==========================================
@@ -54735,7 +54735,7 @@ class PhysicalBall {
     }
 }
 
-},{"three":"dsoTF","@parcel/transformer-js/src/esmodule-helpers.js":"e5pyA"}],"3wFbO":[function(require,module,exports,__globalThis) {
+},{"three":"dsoTF","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT"}],"3wFbO":[function(require,module,exports,__globalThis) {
 // داخل ملف physics.js
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
@@ -54785,51 +54785,51 @@ function checkBallCollisions(physicalBalls) {
     }
 }
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"e5pyA"}],"2njJf":[function(require,module,exports,__globalThis) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT"}],"9RKaH":[function(require,module,exports,__globalThis) {
 module.exports = module.bundle.resolve("ball01.8b00e0f5.jpg") + "?" + Date.now();
 
-},{}],"aC5Gx":[function(require,module,exports,__globalThis) {
+},{}],"aYcrB":[function(require,module,exports,__globalThis) {
 module.exports = module.bundle.resolve("ball02.5ed33583.jpg") + "?" + Date.now();
 
-},{}],"5zAFA":[function(require,module,exports,__globalThis) {
+},{}],"1Dybh":[function(require,module,exports,__globalThis) {
 module.exports = module.bundle.resolve("ball03.71cd29f4.jpg") + "?" + Date.now();
 
-},{}],"5rMIs":[function(require,module,exports,__globalThis) {
+},{}],"dDeix":[function(require,module,exports,__globalThis) {
 module.exports = module.bundle.resolve("ball04.867861df.jpg") + "?" + Date.now();
 
-},{}],"e84y6":[function(require,module,exports,__globalThis) {
+},{}],"cWz5O":[function(require,module,exports,__globalThis) {
 module.exports = module.bundle.resolve("ball05.df4d2c8f.jpg") + "?" + Date.now();
 
-},{}],"97wox":[function(require,module,exports,__globalThis) {
+},{}],"bwzYy":[function(require,module,exports,__globalThis) {
 module.exports = module.bundle.resolve("ball06.3c9240f6.jpg") + "?" + Date.now();
 
-},{}],"lSfWJ":[function(require,module,exports,__globalThis) {
+},{}],"bejuT":[function(require,module,exports,__globalThis) {
 module.exports = module.bundle.resolve("ball07.5cc3705c.jpg") + "?" + Date.now();
 
-},{}],"2G2Wk":[function(require,module,exports,__globalThis) {
+},{}],"1Ybkp":[function(require,module,exports,__globalThis) {
 module.exports = module.bundle.resolve("ball08.e7467967.jpg") + "?" + Date.now();
 
-},{}],"fC3k1":[function(require,module,exports,__globalThis) {
+},{}],"1VWla":[function(require,module,exports,__globalThis) {
 module.exports = module.bundle.resolve("ball09.e317aa75.jpg") + "?" + Date.now();
 
-},{}],"3KnSs":[function(require,module,exports,__globalThis) {
+},{}],"4u03n":[function(require,module,exports,__globalThis) {
 module.exports = module.bundle.resolve("ball10.44041b18.jpg") + "?" + Date.now();
 
-},{}],"iDLby":[function(require,module,exports,__globalThis) {
+},{}],"gy9vZ":[function(require,module,exports,__globalThis) {
 module.exports = module.bundle.resolve("ball11.809f1ac3.jpg") + "?" + Date.now();
 
-},{}],"dWuSs":[function(require,module,exports,__globalThis) {
+},{}],"hcYCq":[function(require,module,exports,__globalThis) {
 module.exports = module.bundle.resolve("ball12.50960c8b.jpg") + "?" + Date.now();
 
-},{}],"h4uX5":[function(require,module,exports,__globalThis) {
+},{}],"7JsK7":[function(require,module,exports,__globalThis) {
 module.exports = module.bundle.resolve("ball13.203f310f.jpg") + "?" + Date.now();
 
-},{}],"gJQcr":[function(require,module,exports,__globalThis) {
+},{}],"i9FZp":[function(require,module,exports,__globalThis) {
 module.exports = module.bundle.resolve("ball14.f3d41fc6.jpg") + "?" + Date.now();
 
-},{}],"53cuP":[function(require,module,exports,__globalThis) {
+},{}],"gvpKX":[function(require,module,exports,__globalThis) {
 module.exports = module.bundle.resolve("ball15.4ca617de.jpg") + "?" + Date.now();
 
-},{}]},["lprZd","dnnhU"], "dnnhU", "parcelRequiredd4a", {}, "./", "/")
+},{}]},["7ttJH","dnnhU"], "dnnhU", "parcelRequiredd4a", {}, "./", "/")
 
 //# sourceMappingURL=billiards-physics-simulation-cacdd36cadba59d7b6baab4b73a5934bec5ff63c.18dafa73.js.map
