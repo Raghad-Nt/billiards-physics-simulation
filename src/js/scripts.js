@@ -224,7 +224,7 @@ function spawnBall(x, z, textureUrl = null) {
 
 // إنشاء الكرة البيضاء مع سرعة ابتدائية قوية للاختبار الحركي البصري
 const whiteBallPhysics = spawnBall(0.0, 1.5, null);
-whiteBallPhysics.velocity.set(0, 0, -1.2);
+whiteBallPhysics.velocity.set(1.5, 0, -3.0);
 
 // رصف مثلث الكرات الملونة الـ 15 المكسوة بصور الخامات الخاصة بكِ
 const spacingX = ballRadius * 2.05;
@@ -257,8 +257,6 @@ function animate() {
 
        pBall.update(dt);
 
-        pBall.velocity.x * dt;
-    pBall.position.z += pBall.velocity.z * dt;
 
         checkTableBoundaries(pBall);
 
@@ -267,13 +265,15 @@ function animate() {
             vBall.position.z = pBall.position.z;
             vBall.position.y = surfaceY + ballRadius; // الحفاظ على منسوب دحرجة ثابت فوق البساط
 
-            // دوران بصري مذهل وواقعي جداً للصور أثناء دحرجة الكرة
-            if (pBall.velocity.length() > 0.01) {
-                const distanceMoved = pBall.velocity.length() * dt;
-                const angle = distanceMoved / ballRadius;
-                const axis = new THREE.Vector3(-pBall.velocity.z, 0, pBall.velocity.x).normalize();
-                vBall.rotateOnWorldAxis(axis, angle);
-            }
+            if (pBall.angularVelocity.length() > 0.001) {
+
+    const angle = pBall.angularVelocity.length() * dt;
+
+    const axis = pBall.angularVelocity.clone().normalize();
+
+    vBall.rotateOnWorldAxis(axis, angle);
+
+}
         }
     }
 
