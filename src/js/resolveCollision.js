@@ -1,12 +1,6 @@
-// resolveCollision.js
-// يطبّق معادلات الاصطدام المائل (Oblique Collision) بين كرتين
-// بالاعتماد على تفكيك السرعة لمحاور محلية: الناظمي (n) والمماسي (t)
-// طبقاً للدراسة الفيزيائية المرفقة (معامل استرداد e=0.93، احتكاك سطحي بين الكرات)
-
-export const RESTITUTION = 0.93;          // معامل الاسترداد e (من الدراسة)
-export const SURFACE_FRICTION = 0.06;     // معامل الاحتكاك السطحي المتبادل (μ_ball)
-export const BALL_DIAMETER = 0.057;       // مجموع قطري كرتين (2 * 0.0285)
-
+export const RESTITUTION = 0.93;
+export const SURFACE_FRICTION = 0.06;
+export const BALL_DIAMETER = 0.057 * 2.5; // تعديل القطر ليصبح 0.1425 متر متوافقاً مع حجم الرسوميات الجديد
 /**
  * يفكك متجه السرعة لكرة معينة إلى مركبتين: ناظمية (n) ومماسية (t)
  * @returns {{vn: number, vt: number}}
