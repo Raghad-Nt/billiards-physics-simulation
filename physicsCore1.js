@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { handleBallBallCollision } from './resolveCollision.js';
 
 const STOP_THRESHOLD = 0.01;
 
@@ -146,4 +147,36 @@ export class PhysicalBall {
             this.position.z += this.velocity.z * dt;
         }
     }
-}    
+} 
+
+
+export class BilliardsPhysicsEngine {
+    constructor() {
+        this.balls = []; // مصفوفة لتخزين الكرات الـ 16 داخل نظام الطاولة
+    }
+
+    // دالة تسجيل كرات اللعبة داخل المحرك
+    registerBall(ball) {
+        this.balls.push(ball);
+    }
+
+    /**
+     * تحديث الخطوة الزمنية للنظام بالكامل ومعالجة الاصطدامات المائلة البينية
+     * @param {number} dt - فارق التوقيت الزمني (Delta Time)
+     */
+    updateEngine(dt) {
+        if (!dt || dt <= 0) return;
+
+        // 1. فحص ومعالجة الاصطدام المائل غير المرن التام ثنائي الأبعاد بين الكرات الملامسة
+        for (let i = 0; i < this.balls.length; i++) {
+            for (let j = i + 1; j < this.balls.length; j++) {
+                handleBallBallCollision(this.balls[i], this.balls[j]);
+            }
+        }
+
+        // 2. تسيير وتحديث حركة كل كرة فردية خطوة بخطوة بناءً على الاحتكاك المتجهي
+        for (let ball of this.balls) {
+            ball.update(dt);
+        }
+    }
+}
