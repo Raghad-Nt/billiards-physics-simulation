@@ -1,8 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { PhysicalBall } from './physicsCore1.js';
-import { checkTableBoundaries ,checkBallCollisions} from './physics.js';
-
+import { checkTableBoundaries, checkBallCollisions } from './physics.js';
 
 // 1. مصفوفات لتخزين الكرات (الفيزيائية والرسومية)
 const physicalBalls = [];
@@ -122,17 +121,15 @@ tableGroup.add(cloth);
 function createCushionMesh(w, h, d, x, z) {
     const geo = new THREE.BoxGeometry(w, h, d);
     const mat = new THREE.MeshStandardMaterial({
-        color: 0x301b0f, // لون خشبي متناسق
+        color: 0x301b0f,
         roughness: 0.35
     });
     const cushion = new THREE.Mesh(geo, mat);
-    // رفع الحافة لتشكل جداراً حقيقياً يرتفع فوق البساط
     cushion.position.set(x, surfaceY + h/2, z);
     cushion.castShadow = true;
     cushion.receiveShadow = true;
     tableGroup.add(cushion);
 }
-// زيادة الارتفاع (h) إلى 15 سم لتمثل جداراً صلباً أمام الكرات
 const cushionH = 0.15;
 createCushionMesh(tableWidth + (cushionWidth * 2), cushionH, cushionWidth, 0, (tableLength / 2) + (cushionWidth / 2));
 createCushionMesh(tableWidth + (cushionWidth * 2), cushionH, cushionWidth, 0, -(tableLength / 2) - (cushionWidth / 2));
@@ -157,31 +154,27 @@ createLeg(legX, -legZ);
 createLeg(-legX, -legZ);
 
 // هـ) التعديل الثاني السحري: بناء ثقوب عميقة حقيقية (Pockets) تحفر داخل جسم الطاولة
-const pocketRadius = 0.13; // نصف قطر مثالي ومكبر ليتسع للكرات
-const pocketDepth = 0.20;  // عمق الحفرة (20 سم لتهبط الكرات بداخلها وتختفي عن السطح)
+const pocketRadius = 0.13;
+const pocketDepth = 0.20;
 
 function createPocket(x, z) {
-    // إنشاء أسطوانة مجوفة ثلاثية أبعاد لتمثيل بئر الثقب
     const pocketGeo = new THREE.CylinderGeometry(pocketRadius, pocketRadius, pocketDepth, 32, 1, false);
     const pocketMat = new THREE.MeshBasicMaterial({
-        color: 0x020202 // أسود مطلق ومطفي ليوحي بعمق سحيق ومظلم
+        color: 0x020202
     });
     const pocket = new THREE.Mesh(pocketGeo, pocketMat);
-
-    // ندفن نصف الأسطوانة داخل سطح البساط لتبدو كحفرة حقيقية غائرة لأسفل
     pocket.position.set(x, surfaceY - (pocketDepth / 2) + 0.005, z);
     tableGroup.add(pocket);
 }
 
-// توزيع الثقوب الستة الحقيقية عند الزوايا والمنتصفين بدقة هندسية مريحة
 const pX = tableWidth / 2 - 0.02;
 const pZ = tableLength / 2 - 0.02;
-createPocket(pX, pZ);     // زاوية أمامية يمنى
-createPocket(-pX, pZ);    // زاوية أمامية يسرى
-createPocket(pX, -pZ);    // زاوية خلفية يمنى
-createPocket(-pX, -pZ);   // زاوية خلفية يسرى
-createPocket(tableWidth / 2, 0);  // الثقب الأوسط الأيمن
-createPocket(-tableWidth / 2, 0); // الثقب الأوسط الأيسر
+createPocket(pX, pZ);
+createPocket(-pX, pZ);
+createPocket(pX, -pZ);
+createPocket(-pX, -pZ);
+createPocket(tableWidth / 2, 0);
+createPocket(-tableWidth / 2, 0);
 
 scene.add(tableGroup);
 
@@ -189,7 +182,7 @@ scene.add(tableGroup);
 // 6. دالة إنشاء الكرات المكبرة (1 فيزياء = 1 رسم)
 // ==========================================================
 let ballIdCounter = 0;
-const ballRadius = 0.0285 * 2.5; // نصف قطر الكرات الضخمة المتناسقة مع الأبعاد الجديدة
+const ballRadius = 0.0285 * 2.5;
 
 function spawnBall(x, z, textureUrl = null) {
     const geometry = new THREE.SphereGeometry(ballRadius, 32, 32);
@@ -200,14 +193,13 @@ function spawnBall(x, z, textureUrl = null) {
         texture.colorSpace = THREE.SRGBColorSpace;
         material = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.1 });
     } else {
-        material = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1 }); // الكرة البيضاء
+        material = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1 });
     }
 
     const mesh = new THREE.Mesh(geometry, material);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 
-    // تصفير الموضع فوق البساط الأخضر بدقة
     mesh.position.set(x, surfaceY + ballRadius, z);
     scene.add(mesh);
     visualBalls.push(mesh);
@@ -221,26 +213,23 @@ function spawnBall(x, z, textureUrl = null) {
 // ==========================================================
 // 7. رصف الكرات وتوزيعها
 // ==========================================================
-
-// إنشاء الكرة البيضاء مع سرعة ابتدائية قوية للاختبار الحركي البصري
 const whiteBallPhysics = spawnBall(0.0, 1.5, null);
 whiteBallPhysics.velocity.set(1.5, 0, -3.0);
 
-// رصف مثلث الكرات الملونة الـ 15 المكسوة بصور الخامات الخاصة بكِ
 const spacingX = ballRadius * 2.05;
 const spacingZ = ballRadius * 1.74;
 
-spawnBall(0.0, -1.0, ballTexturesMap['01']); // رأس المثلث
+spawnBall(0.0, -1.0, ballTexturesMap['01']);
 
-spawnBall(-spacingX / 2, -1.0 - spacingZ, ballTexturesMap['02']); // الصف الثاني
+spawnBall(-spacingX / 2, -1.0 - spacingZ, ballTexturesMap['02']);
 spawnBall( spacingX / 2, -1.0 - spacingZ, ballTexturesMap['03']);
 
-spawnBall(-spacingX, -1.0 - (spacingZ * 2), ballTexturesMap['04']); // الصف الثالث
-spawnBall( 0.0,      -1.0 - (spacingZ * 2), ballTexturesMap['08']); // كرة رقم 8 السوداء بالمنتصف
+spawnBall(-spacingX, -1.0 - (spacingZ * 2), ballTexturesMap['04']);
+spawnBall( 0.0,      -1.0 - (spacingZ * 2), ballTexturesMap['08']);
 spawnBall( spacingX,  -1.0 - (spacingZ * 2), ballTexturesMap['05']);
 
 // ==========================================================
-// 8. حلقة التحريك والرسم المتواصل (مع حساب الدوران التلقائي)
+// 8. حلقة التحريك والرسم المتواصل
 // ==========================================================
 const clock = new THREE.Clock();
 
@@ -255,25 +244,35 @@ function animate() {
         const pBall = physicalBalls[i];
         const vBall = visualBalls[i];
 
-       pBall.update(dt);
-
-
+        pBall.update(dt);
         checkTableBoundaries(pBall);
 
         if (vBall) {
-            vBall.position.x = pBall.position.x;
-            vBall.position.z = pBall.position.z;
-            vBall.position.y = surfaceY + ballRadius; // الحفاظ على منسوب دحرجة ثابت فوق البساط
+            // تأثير السقوط التدريجي ثم الاختفاء الحازم من المشهد
+            if (pBall.phase === 'POCKETED') {
+                // الكائن الفيزيائي يقوم بإنقاص الصدارة العمودية في pBall.position.y لأسفل
+                vBall.position.x = pBall.position.x;
+                vBall.position.z = pBall.position.z;
+                vBall.position.y = (surfaceY + ballRadius) + pBall.position.y;
 
-            if (pBall.angularVelocity.length() > 0.001) {
+                // إذا نزلت الكرة داخل الفوهة مسافة أكبر من قطرها، تختفي تماماً وتحذف من الذاكرة
+                if (pBall.position.y < -(ballRadius * 2)) {
+                    vBall.visible = false;
+                    scene.remove(vBall);
+                }
+            } else {
+                // الوضع الطبيعي فوق البساط الأخضر
+                vBall.position.x = pBall.position.x;
+                vBall.position.z = pBall.position.z;
+                vBall.position.y = surfaceY + ballRadius;
 
-    const angle = pBall.angularVelocity.length() * dt;
-
-    const axis = pBall.angularVelocity.clone().normalize();
-
-    vBall.rotateOnWorldAxis(axis, angle);
-
-}
+                // حساب الدوران الحالي للكرة
+                if (pBall.angularVelocity.length() > 0.001) {
+                    const angle = pBall.angularVelocity.length() * dt;
+                    const axis = pBall.angularVelocity.clone().normalize();
+                    vBall.rotateOnWorldAxis(axis, angle);
+                }
+            }
         }
     }
 
@@ -286,4 +285,4 @@ window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-});   
+});

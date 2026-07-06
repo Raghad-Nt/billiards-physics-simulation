@@ -866,13 +866,11 @@ function createCushionMesh(w, h, d, x, z) {
         roughness: 0.35
     });
     const cushion = new _three.Mesh(geo, mat);
-    // رفع الحافة لتشكل جداراً حقيقياً يرتفع فوق البساط
     cushion.position.set(x, surfaceY + h / 2, z);
     cushion.castShadow = true;
     cushion.receiveShadow = true;
     tableGroup.add(cushion);
 }
-// زيادة الارتفاع (h) إلى 15 سم لتمثل جداراً صلباً أمام الكرات
 const cushionH = 0.15;
 createCushionMesh(tableWidth + cushionWidth * 2, cushionH, cushionWidth, 0, tableLength / 2 + cushionWidth / 2);
 createCushionMesh(tableWidth + cushionWidth * 2, cushionH, cushionWidth, 0, -(tableLength / 2) - cushionWidth / 2);
@@ -898,34 +896,31 @@ createLeg(-legX, legZ);
 createLeg(legX, -legZ);
 createLeg(-legX, -legZ);
 // هـ) التعديل الثاني السحري: بناء ثقوب عميقة حقيقية (Pockets) تحفر داخل جسم الطاولة
-const pocketRadius = 0.13; // نصف قطر مثالي ومكبر ليتسع للكرات
-const pocketDepth = 0.20; // عمق الحفرة (20 سم لتهبط الكرات بداخلها وتختفي عن السطح)
+const pocketRadius = 0.13;
+const pocketDepth = 0.20;
 function createPocket(x, z) {
-    // إنشاء أسطوانة مجوفة ثلاثية أبعاد لتمثيل بئر الثقب
     const pocketGeo = new _three.CylinderGeometry(pocketRadius, pocketRadius, pocketDepth, 32, 1, false);
     const pocketMat = new _three.MeshBasicMaterial({
-        color: 0x020202 // أسود مطلق ومطفي ليوحي بعمق سحيق ومظلم
+        color: 0x020202
     });
     const pocket = new _three.Mesh(pocketGeo, pocketMat);
-    // ندفن نصف الأسطوانة داخل سطح البساط لتبدو كحفرة حقيقية غائرة لأسفل
     pocket.position.set(x, surfaceY - pocketDepth / 2 + 0.005, z);
     tableGroup.add(pocket);
 }
-// توزيع الثقوب الستة الحقيقية عند الزوايا والمنتصفين بدقة هندسية مريحة
 const pX = tableWidth / 2 - 0.02;
 const pZ = tableLength / 2 - 0.02;
-createPocket(pX, pZ); // زاوية أمامية يمنى
-createPocket(-pX, pZ); // زاوية أمامية يسرى
-createPocket(pX, -pZ); // زاوية خلفية يمنى
-createPocket(-pX, -pZ); // زاوية خلفية يسرى
-createPocket(tableWidth / 2, 0); // الثقب الأوسط الأيمن
-createPocket(-tableWidth / 2, 0); // الثقب الأوسط الأيسر
+createPocket(pX, pZ);
+createPocket(-pX, pZ);
+createPocket(pX, -pZ);
+createPocket(-pX, -pZ);
+createPocket(tableWidth / 2, 0);
+createPocket(-tableWidth / 2, 0);
 scene.add(tableGroup);
 // ==========================================================
 // 6. دالة إنشاء الكرات المكبرة (1 فيزياء = 1 رسم)
 // ==========================================================
 let ballIdCounter = 0;
-const ballRadius = 0.0285 * 2.5; // نصف قطر الكرات الضخمة المتناسقة مع الأبعاد الجديدة
+const ballRadius = 0.0285 * 2.5;
 function spawnBall(x, z, textureUrl = null) {
     const geometry = new _three.SphereGeometry(ballRadius, 32, 32);
     let material;
@@ -939,11 +934,10 @@ function spawnBall(x, z, textureUrl = null) {
     } else material = new _three.MeshStandardMaterial({
         color: 0xffffff,
         roughness: 0.1
-    }); // الكرة البيضاء
+    });
     const mesh = new _three.Mesh(geometry, material);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
-    // تصفير الموضع فوق البساط الأخضر بدقة
     mesh.position.set(x, surfaceY + ballRadius, z);
     scene.add(mesh);
     visualBalls.push(mesh);
@@ -954,20 +948,18 @@ function spawnBall(x, z, textureUrl = null) {
 // ==========================================================
 // 7. رصف الكرات وتوزيعها
 // ==========================================================
-// إنشاء الكرة البيضاء مع سرعة ابتدائية قوية للاختبار الحركي البصري
 const whiteBallPhysics = spawnBall(0.0, 1.5, null);
 whiteBallPhysics.velocity.set(1.5, 0, -3);
-// رصف مثلث الكرات الملونة الـ 15 المكسوة بصور الخامات الخاصة بكِ
 const spacingX = ballRadius * 2.05;
 const spacingZ = ballRadius * 1.74;
-spawnBall(0.0, -1, ballTexturesMap['01']); // رأس المثلث
-spawnBall(-spacingX / 2, -1 - spacingZ, ballTexturesMap['02']); // الصف الثاني
+spawnBall(0.0, -1, ballTexturesMap['01']);
+spawnBall(-spacingX / 2, -1 - spacingZ, ballTexturesMap['02']);
 spawnBall(spacingX / 2, -1 - spacingZ, ballTexturesMap['03']);
-spawnBall(-spacingX, -1 - spacingZ * 2, ballTexturesMap['04']); // الصف الثالث
-spawnBall(0.0, -1 - spacingZ * 2, ballTexturesMap['08']); // كرة رقم 8 السوداء بالمنتصف
+spawnBall(-spacingX, -1 - spacingZ * 2, ballTexturesMap['04']);
+spawnBall(0.0, -1 - spacingZ * 2, ballTexturesMap['08']);
 spawnBall(spacingX, -1 - spacingZ * 2, ballTexturesMap['05']);
 // ==========================================================
-// 8. حلقة التحريك والرسم المتواصل (مع حساب الدوران التلقائي)
+// 8. حلقة التحريك والرسم المتواصل
 // ==========================================================
 const clock = new _three.Clock();
 function animate() {
@@ -981,13 +973,28 @@ function animate() {
         pBall.update(dt);
         (0, _physicsJs.checkTableBoundaries)(pBall);
         if (vBall) {
-            vBall.position.x = pBall.position.x;
-            vBall.position.z = pBall.position.z;
-            vBall.position.y = surfaceY + ballRadius; // الحفاظ على منسوب دحرجة ثابت فوق البساط
-            if (pBall.angularVelocity.length() > 0.001) {
-                const angle = pBall.angularVelocity.length() * dt;
-                const axis = pBall.angularVelocity.clone().normalize();
-                vBall.rotateOnWorldAxis(axis, angle);
+            // تأثير السقوط التدريجي ثم الاختفاء الحازم من المشهد
+            if (pBall.phase === 'POCKETED') {
+                // الكائن الفيزيائي يقوم بإنقاص الصدارة العمودية في pBall.position.y لأسفل
+                vBall.position.x = pBall.position.x;
+                vBall.position.z = pBall.position.z;
+                vBall.position.y = surfaceY + ballRadius + pBall.position.y;
+                // إذا نزلت الكرة داخل الفوهة مسافة أكبر من قطرها، تختفي تماماً وتحذف من الذاكرة
+                if (pBall.position.y < -(ballRadius * 2)) {
+                    vBall.visible = false;
+                    scene.remove(vBall);
+                }
+            } else {
+                // الوضع الطبيعي فوق البساط الأخضر
+                vBall.position.x = pBall.position.x;
+                vBall.position.z = pBall.position.z;
+                vBall.position.y = surfaceY + ballRadius;
+                // حساب الدوران الحالي للكرة
+                if (pBall.angularVelocity.length() > 0.001) {
+                    const angle = pBall.angularVelocity.length() * dt;
+                    const axis = pBall.angularVelocity.clone().normalize();
+                    vBall.rotateOnWorldAxis(axis, angle);
+                }
             }
         }
     }
@@ -54683,87 +54690,180 @@ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "PhysicalBall", ()=>PhysicalBall);
 var _three = require("three");
-const STOP_THRESHOLD = 0.01;
+const STOP_THRESHOLD = 0.05; // رفع الحد قليلاً لضمان التوقف الحازم والواقعي
 class PhysicalBall {
     constructor(id, initialX, initialZ){
         this.id = id;
-        // الثوابت المحدثة للكرة مكبّرة 2.5 مرة لتطابق الطاولة والرسوميات
-        this.radius = 0.0285 * 2.5; // 0.07125 متر ليتناسق الرندر مع الفيزياء
+        this.radius = 0.0285 * 2.5;
         this.mass = 0.170;
         this.position = new _three.Vector3(initialX, 0, initialZ);
         this.velocity = new _three.Vector3(0, 0, 0);
         this.angularVelocity = new _three.Vector3(0, 0, 0);
-        this.dragCoefficient = 0.015; // معامل مقاومة الهواء
-        this.frictionCoefficient = 0.10; // معامل الاحتكاك
-        this.inertia = 0.4 * this.mass * this.radius * this.radius; // عزم القصور الذاتي
+        this.dragCoefficient = 0.015;
+        this.frictionCoefficient = 0.15; // رفع الاحتكاك الحركي قليلاً للسرعة والتوقف الواقعي
+        this.rollingFrictionCoefficient = 0.02; // احتكاك التدحرج
+        this.inertia = 0.4 * this.mass * this.radius * this.radius;
         this.phase = 'idle';
+        this.t_sliding = 0;
+        this.t_rolling_limit = 0;
+        // حالات السقوط في الثقوب
+        this.isPocketed = false;
+        this.fallingSpeedY = 0;
     }
-    // حساب قوة مقاومة الهواء
-    computeDragForce() {
-        return this.velocity.clone().multiplyScalar(-this.dragCoefficient);
+    calculateRollingTime(v0, omega0) {
+        const g = 9.81;
+        const mu_k = this.frictionCoefficient;
+        const m = this.mass;
+        const c = this.dragCoefficient;
+        const r = this.radius;
+        const f = (t)=>{
+            return (v0 + m * mu_k * g / c) * Math.exp(-c * t / m) - m * mu_k * g / c - r * omega0 - 2.5 * mu_k * g * t;
+        };
+        const df = (t)=>{
+            return -(c / m) * (v0 + m * mu_k * g / c) * Math.exp(-c * t / m) - 2.5 * mu_k * g;
+        };
+        let t = 0.1;
+        for(let i = 0; i < 15; i++){
+            let ft = f(t);
+            let dft = df(t);
+            if (Math.abs(dft) < 1e-6) break;
+            let nextT = t - ft / dft;
+            if (nextT < 0 || nextT > 5) {
+                t = 2 * (v0 - r * omega0) / (7 * mu_k * g);
+                break;
+            }
+            if (Math.abs(nextT - t) < 0.001) {
+                t = nextT;
+                break;
+            }
+            t = nextT;
+        }
+        return Math.max(0, t);
     }
-    // حساب قوة الاحتكاك Ff = -μmg
-    computeFrictionForce() {
-        if (this.velocity.length() === 0) return new _three.Vector3(0, 0, 0);
-        const gravity = 9.81;
-        const frictionMagnitude = this.frictionCoefficient * this.mass * gravity;
-        return this.velocity.clone().normalize().multiplyScalar(-frictionMagnitude);
-    }
-    // حساب القوة الكلية المؤثرة على الكرة F = Ff + Fd
-    computeTotalForce() {
-        const dragForce = this.computeDragForce();
-        const frictionForce = this.computeFrictionForce();
-        return dragForce.add(frictionForce);
-    }
-    // حساب العزم الناتج عن الاحتكاك τ = r × F
-    computeTorque() {
-        if (this.velocity.length() === 0) return new _three.Vector3(0, 0, 0);
-        const frictionForce = this.computeFrictionForce();
-        const radiusVector = new _three.Vector3(0, -this.radius, 0);
-        return radiusVector.cross(frictionForce);
-    }
-    // دالة استقبال الضربات الابتدائية من مبرمج الكيو
     receiveShot(speed, topSpinOmega = 0, backSpinOmega = 0, sideSpin = 0, dirX = 0, dirZ = -1) {
+        if (this.isPocketed) return; // لا تستقبل ضربات إذا سقطت
         const len = Math.sqrt(dirX * dirX + dirZ * dirZ);
         const nx = len > 0 ? dirX / len : 0;
         const nz = len > 0 ? dirZ / len : -1;
         this.velocity.set(nx * speed, 0, nz * speed);
         this.angularVelocity.set(0, 0, 0);
-        // تفعيل الـ Top-Spin
+        let omega0 = 0;
         if (topSpinOmega > 0) {
-            this.angularVelocity.x += -nz * topSpinOmega;
-            this.angularVelocity.z += nx * topSpinOmega;
-            this.phase = 'top-spin-sliding';
+            this.angularVelocity.x = -nz * topSpinOmega;
+            this.angularVelocity.z = nx * topSpinOmega;
+            omega0 = topSpinOmega;
+        } else if (backSpinOmega > 0) {
+            this.angularVelocity.x = nz * backSpinOmega;
+            this.angularVelocity.z = -nx * backSpinOmega;
+            omega0 = -backSpinOmega;
         }
-        // تفعيل الـ Back-Spin
-        if (backSpinOmega > 0) {
-            this.angularVelocity.x += nz * backSpinOmega;
-            this.angularVelocity.z += -nx * backSpinOmega;
-            this.phase = 'back-spin-sliding';
-        }
-        // تفعيل الـ Side-Spin (English) حول المحور الرأسي Y
         if (sideSpin !== 0) this.angularVelocity.y = sideSpin;
-        if (topSpinOmega === 0 && backSpinOmega === 0) this.phase = 'back-spin-sliding';
+        this.t_sliding = 0;
+        this.t_rolling_limit = this.calculateRollingTime(speed, omega0);
+        this.phase = this.t_rolling_limit > 0 ? 'SLIDING' : 'ROLLING';
     }
-    // دالة التحديث الحركي المتجهي العادية
+    computeDragForce() {
+        return this.velocity.clone().multiplyScalar(-this.dragCoefficient);
+    }
+    // دالة التحقق من السقوط في الثقوب الستة بناءً على الإحداثيات المكبّرة
+    checkPockets() {
+        if (this.isPocketed) return;
+        // إحداثيات الثقوب الستة المحددة بدقة في الرسوميات (مضروبة بـ 2.5)
+        const pX = 1.5675;
+        const pZ = 3.155;
+        const pockets = [
+            {
+                x: pX,
+                z: pZ
+            },
+            {
+                x: -pX,
+                z: pZ
+            },
+            {
+                x: pX,
+                z: -pZ
+            },
+            {
+                x: -pX,
+                z: -pZ
+            },
+            {
+                x: 1.5875,
+                z: 0
+            },
+            {
+                x: -1.5875,
+                z: 0
+            }
+        ];
+        const pocketRadiusTrigger = 0.18; // مدى استشعار الفوهة
+        for (let pocket of pockets){
+            const dx = this.position.x - pocket.x;
+            const dz = this.position.z - pocket.z;
+            const dist = Math.sqrt(dx * dx + dz * dz);
+            if (dist < pocketRadiusTrigger) {
+                this.isPocketed = true;
+                this.phase = 'POCKETED';
+                // توجيه السرعة ببطء نحو مركز الحفرة لتبدو الحركة انسيابية
+                this.velocity.set(pocket.x - this.position.x, 0, pocket.z - this.position.z).normalize().multiplyScalar(0.5);
+                console.log(`[Pocket] Ball ID: ${this.id} is falling into a pocket!`);
+                break;
+            }
+        }
+    }
     update(dt) {
-        if (this.velocity.x === 0 && this.velocity.z === 0) return;
-        const totalForce = this.computeTotalForce();
-        const acceleration = totalForce.clone().divideScalar(this.mass);
-        this.velocity.add(acceleration.multiplyScalar(dt));
-        const torque = this.computeTorque();
-        const angularAcceleration = torque.clone().divideScalar(this.inertia);
-        this.angularVelocity.add(angularAcceleration.multiplyScalar(dt));
-        let newSpeed = this.velocity.length();
-        if (newSpeed <= STOP_THRESHOLD) {
+        // معالجة حركة السقوط العمودي لأسفل داخل الحفرة
+        // معالجة حركة السقوط داخل الحفرة والاختفاء المباشر
+        // معالجة حركة السقوط العمودي لأسفل داخل الحفرة
+        if (this.phase === 'POCKETED') {
+            this.velocity.set(0, 0, 0);
+            this.angularVelocity.set(0, 0, 0);
+            this.fallingSpeedY += 9.81 * dt; // تسارع الجاذبية لأسفل
+            this.position.y -= this.fallingSpeedY * dt; // الهبوط تدريجياً
+            return;
+        }
+        let speed = this.velocity.length();
+        // التوقف الحازم لمنع الانزلاق اللانهائي المجهري
+        if (speed <= STOP_THRESHOLD) {
             this.velocity.set(0, 0, 0);
             this.angularVelocity.set(0, 0, 0);
             this.phase = 'idle';
-            console.log(`[STOP] Ball ID: ${this.id} stopped.`);
-        } else {
-            this.position.x += this.velocity.x * dt;
-            this.position.z += this.velocity.z * dt;
+            return;
         }
+        this.checkPockets();
+        if (this.phase === 'SLIDING') {
+            this.t_sliding += dt;
+            const gravity = 9.81;
+            const frictionMagnitude = this.frictionCoefficient * this.mass * gravity;
+            const frictionForce = this.velocity.clone().normalize().multiplyScalar(-frictionMagnitude);
+            const dragForce = this.computeDragForce();
+            const totalForce = frictionForce.add(dragForce);
+            const acceleration = totalForce.clone().divideScalar(this.mass);
+            this.velocity.add(acceleration.multiplyScalar(dt));
+            const radiusVector = new _three.Vector3(0, -this.radius, 0);
+            const torque = radiusVector.cross(totalForce);
+            const angularAcceleration = torque.clone().divideScalar(this.inertia);
+            this.angularVelocity.add(angularAcceleration.multiplyScalar(dt));
+            const v_mag = this.velocity.length();
+            const omega_mag = Math.sqrt(this.angularVelocity.x * this.angularVelocity.x + this.angularVelocity.z * this.angularVelocity.z);
+            if (this.t_sliding >= this.t_rolling_limit || Math.abs(v_mag - this.radius * omega_mag) < 0.05) this.phase = 'ROLLING';
+        } else if (this.phase === 'ROLLING') {
+            const gravity = 9.81;
+            const rollingFrictionMag = this.rollingFrictionCoefficient * this.mass * gravity;
+            const rollingFrictionForce = this.velocity.clone().normalize().multiplyScalar(-rollingFrictionMag);
+            const dragForce = this.computeDragForce();
+            const totalForce = rollingFrictionForce.add(dragForce);
+            const acceleration = totalForce.clone().divideScalar(this.mass);
+            this.velocity.add(acceleration.multiplyScalar(dt));
+            const v_mag = this.velocity.length();
+            const direction = this.velocity.clone().normalize();
+            this.angularVelocity.x = -direction.z * (v_mag / this.radius);
+            this.angularVelocity.z = direction.x * (v_mag / this.radius);
+        }
+        // تحديث الموضع الأفقي
+        this.position.x += this.velocity.x * dt;
+        this.position.z += this.velocity.z * dt;
     }
 }
 
@@ -54773,13 +54873,13 @@ parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "checkTableBoundaries", ()=>checkTableBoundaries);
 parcelHelpers.export(exports, "checkBallCollisions", ()=>checkBallCollisions);
 var _resolveCollisionJs = require("./resolveCollision.js");
-// تحديث الثوابت لتتوافق مع الأبعاد الجديدة المكبّرة للطاولة والكرات
+// تحديث الثوابت لتتوافق تماماً مع أبعاد الطاولة والكرات المكبرة 2.5 مرة
 const BALL_RADIUS = 0.0285 * 2.5; // 0.07125 متر
-const TABLE_LIMIT_X = 1.27;
-const TABLE_LIMIT_Z = 2.6;
+const TABLE_LIMIT_X = 3.175; // الحدود متطابقة مع الرسوميات
+const TABLE_LIMIT_Z = 3.175; // نصف طول الطاولة من المركز
 const BOUNCE_COEFFICIENT = 0.8;
 function checkTableBoundaries(pBall) {
-    const maxX = TABLE_LIMIT_X - BALL_RADIUS;
+    const maxX = TABLE_LIMIT_X / 2 - BALL_RADIUS;
     const maxZ = TABLE_LIMIT_Z - BALL_RADIUS;
     // محور X
     if (pBall.position.x > maxX) {
@@ -54799,15 +54899,16 @@ function checkTableBoundaries(pBall) {
     }
 }
 function checkBallCollisions(physicalBalls) {
-    const BALL_DIAMETER = BALL_RADIUS * 2; // القطر الفعلي للكرات المكبّرة
+    const BALL_DIAMETER = BALL_RADIUS * 2; // 0.1425 متر الحجم الفعلي
     for(let i = 0; i < physicalBalls.length; i++)for(let j = i + 1; j < physicalBalls.length; j++){
         let ballA = physicalBalls[i];
         let ballB = physicalBalls[j];
         let dx = ballA.position.x - ballB.position.x;
         let dz = ballA.position.z - ballB.position.z;
         let distance = Math.sqrt(dx * dx + dz * dz);
+        // تفعيل حل التصادم المائل الحقيقي بدلاً من مجرد الطباعة
         if (distance < BALL_DIAMETER) {
-            console.log("[Radar] Collision detected between balls! Resolving physics...");
+            console.log(`[Collision] Between Ball ${ballA.id} and Ball ${ballB.id}`);
             (0, _resolveCollisionJs.resolveCollision)(ballA, ballB);
         }
     }

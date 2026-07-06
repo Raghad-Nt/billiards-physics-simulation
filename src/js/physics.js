@@ -1,13 +1,14 @@
 import { resolveCollision } from './resolveCollision.js';
 
-// تحديث الثوابت لتتوافق مع الأبعاد الجديدة المكبّرة للطاولة والكرات
+// تحديث الثوابت لتتوافق تماماً مع أبعاد الطاولة والكرات المكبرة 2.5 مرة
 const BALL_RADIUS = 0.0285 * 2.5; // 0.07125 متر
-const TABLE_LIMIT_X = 1.27;
-const TABLE_LIMIT_Z = 2.6;
+const TABLE_LIMIT_X = 1.27 * 2.5; // الحدود متطابقة مع الرسوميات
+const TABLE_LIMIT_Z = 2.54 * 2.5 / 2; // نصف طول الطاولة من المركز
+
 const BOUNCE_COEFFICIENT = 0.8;
 
 export function checkTableBoundaries(pBall) {
-    const maxX = TABLE_LIMIT_X - BALL_RADIUS;
+    const maxX = TABLE_LIMIT_X / 2 - BALL_RADIUS;
     const maxZ = TABLE_LIMIT_Z - BALL_RADIUS;
 
     // محور X
@@ -30,7 +31,7 @@ export function checkTableBoundaries(pBall) {
 }
 
 export function checkBallCollisions(physicalBalls) {
-    const BALL_DIAMETER = BALL_RADIUS * 2; // القطر الفعلي للكرات المكبّرة
+    const BALL_DIAMETER = BALL_RADIUS * 2; // 0.1425 متر الحجم الفعلي
 
     for (let i = 0; i < physicalBalls.length; i++) {
         for (let j = i + 1; j < physicalBalls.length; j++) {
@@ -41,8 +42,9 @@ export function checkBallCollisions(physicalBalls) {
             let dz = ballA.position.z - ballB.position.z;
             let distance = Math.sqrt(dx * dx + dz * dz);
 
+            // تفعيل حل التصادم المائل الحقيقي بدلاً من مجرد الطباعة
             if (distance < BALL_DIAMETER) {
-                console.log("[Radar] Collision detected between balls! Resolving physics...");
+                console.log(`[Collision] Between Ball ${ballA.id} and Ball ${ballB.id}`);
                 resolveCollision(ballA, ballB);
             }
         }
