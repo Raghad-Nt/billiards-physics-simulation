@@ -1,182 +1,217 @@
 import * as THREE from 'three';
-import { handleBallBallCollision } from './resolveCollision.js';
 
-const STOP_THRESHOLD = 0.01;
+const STOP_THRESHOLD = 0.05; // رفع الحد قليلاً لضمان التوقف الحازم والواقعي
 
 export class PhysicalBall {
     constructor(id, initialX, initialZ) {
         this.id = id;
-
-        // الثوابت المحدثة للكرة مكبّرة 2.5 مرة لتطابق الطاولة والرسوميات
-        this.radius = 0.0285 * 2.5; // 0.07125 متر ليتناسق الرندر مع الفيزياء
+        this.radius = 0.0285 * 2.5;
         this.mass = 0.170;
 
         this.position = new THREE.Vector3(initialX, 0, initialZ);
         this.velocity = new THREE.Vector3(0, 0, 0);
         this.angularVelocity = new THREE.Vector3(0, 0, 0);
 
-        this.dragCoefficient = 0.015;  // معامل مقاومة الهواء
-        this.frictionCoefficient = 0.10; // معامل الاحتكاك
-        this.inertia = 0.4 * this.mass * this.radius * this.radius; // عزم القصور الذاتي
+        this.dragCoefficient = 0.015;
+        this.frictionCoefficient = 0.15;  // رفع الاحتكاك الحركي قليلاً للسرعة والتوقف الواقعي
+        this.rollingFrictionCoefficient = 0.02; // احتكاك التدحرج
+
+        this.inertia = 0.4 * this.mass * this.radius * this.radius;
+
         this.phase = 'idle';
+        this.t_sliding = 0;
+        this.t_rolling_limit = 0;
+
+        // حالات السقوط في الثقوب
+        this.isPocketed = false;
+        this.fallingSpeedY = 0;
     }
 
-    // حساب قوة مقاومة الهواء
+    calculateRollingTime(v0, omega0) {
+        const g = 9.81;
+        const mu_k = this.frictionCoefficient;
+        const m = this.mass;
+        const c = this.dragCoefficient;
+        const r = this.radius;
+
+        const f = (t) => {
+            return (v0 + (m * mu_k * g) / c) * Math.exp((-c * t) / m) - (m * mu_k * g) / c - r * omega0 - 2.5 * mu_k * g * t;
+        };
+
+        const df = (t) => {
+            return -(c / m) * (v0 + (m * mu_k * g) / c) * Math.exp((-c * t) / m) - 2.5 * mu_k * g;
+        };
+
+        let t = 0.1;
+        for (let i = 0; i < 15; i++) {
+            let ft = f(t);
+            let dft = df(t);
+            if (Math.abs(dft) < 1e-6) break;
+            let nextT = t - ft / dft;
+            if (nextT < 0 || nextT > 5) {
+                t = (2 * (v0 - r * omega0)) / (7 * mu_k * g);
+                break;
+            }
+            if (Math.abs(nextT - t) < 0.001) { t = nextT; break; }
+            t = nextT;
+        }
+        return Math.max(0, t);
+    }
+
+    receiveShot(speed, topSpinOmega = 0, backSpinOmega = 0, sideSpin = 0, dirX = 0, dirZ = -1) {
+        if (this.isPocketed) return; // لا تستقبل ضربات إذا سقطت
+
+        const len = Math.sqrt(dirX * dirX + dirZ * dirZ);
+        const nx = len > 0 ? dirX / len : 0;
+        const nz = len > 0 ? dirZ / len : -1;
+
+        this.velocity.set(nx * speed, 0, nz * speed);
+        this.angularVelocity.set(0, 0, 0);
+
+        let omega0 = 0;
+        if (topSpinOmega > 0) {
+            this.angularVelocity.x = -nz * topSpinOmega;
+            this.angularVelocity.z = nx * topSpinOmega;
+            omega0 = topSpinOmega;
+        } else if (backSpinOmega > 0) {
+            this.angularVelocity.x = nz * backSpinOmega;
+            this.angularVelocity.z = -nx * backSpinOmega;
+            omega0 = -backSpinOmega;
+        }
+
+        if (sideSpin !== 0) this.angularVelocity.y = sideSpin;
+
+        this.t_sliding = 0;
+        this.t_rolling_limit = this.calculateRollingTime(speed, omega0);
+        this.phase = this.t_rolling_limit > 0 ? 'SLIDING' : 'ROLLING';
+    }
+
     computeDragForce() {
         return this.velocity.clone().multiplyScalar(-this.dragCoefficient);
     }
 
-    // حساب قوة الاحتكاك Ff = -μmg
-    computeFrictionForce() {
-        if (this.velocity.length() === 0) {
-            return new THREE.Vector3(0, 0, 0);
-        }
-        const gravity = 9.81;
-        const frictionMagnitude = this.frictionCoefficient * this.mass * gravity;
-        return this.velocity.clone().normalize().multiplyScalar(-frictionMagnitude);
-    }
+    // دالة التحقق من السقوط في الثقوب الستة بناءً على الإحداثيات المكبّرة
+    checkPockets() {
+        if (this.isPocketed) return;
 
-    // حساب القوة الكلية المؤثرة على الكرة F = Ff + Fd
-    computeTotalForce() {
-        const dragForce = this.computeDragForce();
-        const frictionForce = this.computeFrictionForce();
-        return dragForce.add(frictionForce);
-    }
+        // إحداثيات الثقوب الستة المحددة بدقة في الرسوميات (مضروبة بـ 2.5)
+        const pX = (1.27 * 2.5) / 2 - 0.02;
+        const pZ = (2.54 * 2.5) / 2 - 0.02;
+        const pockets = [
+            { x: pX, z: pZ },    { x: -pX, z: pZ },
+            { x: pX, z: -pZ },   { x: -pX, z: -pZ },
+            { x: (1.27 * 2.5)/2, z: 0 }, { x: -(1.27 * 2.5)/2, z: 0 }
+        ];
 
-    // حساب العزم الناتج عن الاحتكاك τ = r × F
-    computeTorque() {
-        if (this.velocity.length() === 0) {
-            return new THREE.Vector3(0, 0, 0);
-        }
-        const frictionForce = this.computeFrictionForce();
-        const radiusVector = new THREE.Vector3(0, -this.radius, 0);
-        return radiusVector.cross(frictionForce);
-    }
+        const pocketRadiusTrigger = 0.18; // مدى استشعار الفوهة
 
-    // دالة استقبال الضربات الابتدائية من مبرمج الكيو
-    receiveShot(speed, topSpinOmega = 0, backSpinOmega = 0, sideSpin = 0, dirX = 0, dirZ = -1) {
-        const len = Math.sqrt(dirX * dirX + dirZ * dirZ);
-        const nx = len > 0 ? dirX / len : 0;
-        const nz = len > 0 ? dirZ / len : -1;
-        this.velocity.set(nx * speed, 0, nz * speed);
+        for (let pocket of pockets) {
+            const dx = this.position.x - pocket.x;
+            const dz = this.position.z - pocket.z;
+            const dist = Math.sqrt(dx * dx + dz * dz);
 
-        this.angularVelocity.set(0, 0, 0);
-
-        // تفعيل الـ Top-Spin
-        if (topSpinOmega > 0) {
-            this.angularVelocity.x += -nz * topSpinOmega;
-            this.angularVelocity.z += nx * topSpinOmega;
-            this.phase = 'top-spin-sliding';
-        }
-        // تفعيل الـ Back-Spin
-        if (backSpinOmega > 0) {
-            this.angularVelocity.x += nz * backSpinOmega;
-            this.angularVelocity.z += -nx * backSpinOmega;
-            this.phase = 'back-spin-sliding';
-        }
-        // تفعيل الـ Side-Spin (English) حول المحور الرأسي Y
-        if (sideSpin !== 0) {
-            this.angularVelocity.y = sideSpin;
-        }
-        if (topSpinOmega === 0 && backSpinOmega === 0) {
-            this.phase = 'back-spin-sliding';
-        }
-        
-        this.angularVelocity.y = sideSpin; // إسناد الدوران الجانبي لمحور Y
-
-       // إضافة تأثير الـ Squirt الانحرافي الفوري (عكس اتجاه الدوران)
-       if (Math.abs(sideSpin) > 0.01) {
-       // حساب متجه عمودي خفيف بناءً على اتجاه الحركة الابتدائي لحرف الكرة
-       this.velocity.x -= this.velocity.z * (sideSpin * 0.05);
-       this.velocity.z += this.velocity.x * (sideSpin * 0.05);
-       } 
-    
-    }
-
-    // دالة التحديث الحركي المتجهي العادية
-    update(dt) {
-    
-        if (this.velocity.x === 0 && this.velocity.z === 0) {
-            return;
-        }
-
-        const totalForce = this.computeTotalForce();
-        const acceleration = totalForce.clone().divideScalar(this.mass);
-        this.velocity.add(acceleration.multiplyScalar(dt));
-
-        // --- كود المبرمج الفيزيائي 7: تطبيق الـ Swerve ---
-        let currentSpeed = this.velocity.length();
-        if (currentSpeed > 0.01 && Math.abs(this.angularVelocity.y) > 0.01) {
-            const frictionCoeff = 0.02; // احتكاك الطاولة
-            const gravity = 9.81;
-
-            // حساب المتجه العمودي على اتجاه الحركة الحالي لإنتاج الانحناء الفعلي (Curve)
-            const perpX = -this.velocity.z / currentSpeed;
-            const perpZ = this.velocity.x / currentSpeed;
-
-            // تسارع الانحناء الناتج عن تفاعل الدوران الجانبي مع الطاولة
-            const swerveAccel = this.angularVelocity.y * frictionCoeff * gravity * 0.5;
-
-            // تعديل مركبات السرعة الخطية مباشرة بناءً على الدوران الجانبي
-            this.velocity.x += perpX * swerveAccel * dt;
-            this.velocity.z += perpZ * swerveAccel * dt;
-
-            // تلاشي وتخفيف الدوران الجانبي تدريجياً بسبب الاحتكاك مع القماش
-            const spinDecay = 0.95 * dt;
-            if (this.angularVelocity.y > 0) {
-                this.angularVelocity.y = Math.max(0, this.angularVelocity.y - spinDecay);
-            } else {
-                this.angularVelocity.y = Math.min(0, this.angularVelocity.y + spinDecay);
+            if (dist < pocketRadiusTrigger) {
+                this.isPocketed = true;
+                this.phase = 'POCKETED';
+                // توجيه السرعة ببطء نحو مركز الحفرة لتبدو الحركة انسيابية
+                this.velocity.set(pocket.x - this.position.x, 0, pocket.z - this.position.z).normalize().multiplyScalar(0.5);
+                console.log(`[Pocket] Ball ID: ${this.id} is falling into a pocket!`);
+                break;
             }
         }
-        
+    }
 
-        const torque = this.computeTorque();
-        const angularAcceleration = torque.clone().divideScalar(this.inertia);
-        this.angularVelocity.add(angularAcceleration.multiplyScalar(dt));
+    update(dt) {
+        // / إذا كانت الكرة ساكنة تماماً وليست في الفوهة، لا تفعل شيئاً واخرج فوراً
+        if (this.phase === 'idle') return;
 
-        let newSpeed = this.velocity.length();
+        // معالجة حركة السقوط العمودي لأسفل داخل الحفرة
+        if (this.phase === 'POCKETED') {
 
-        if (newSpeed <= STOP_THRESHOLD) {
+        }
+        // معالجة حركة السقوط العمودي لأسفل داخل الحفرة
+        // معالجة حركة السقوط داخل الحفرة والاختفاء المباشر
+        // معالجة حركة السقوط العمودي لأسفل داخل الحفرة
+
+        //  عدلي هذا الجزء فقط بـ PhysicsCore.js:
+if (this.phase === 'POCKETED') {
+    this.velocity.set(0, 0, 0);
+    this.angularVelocity.set(0, 0, 0);
+    
+    // إذا الكرة ليست مخفية ورجعناها بالطاقة (يعني isPocketed صارت false)، رجّع الـ y مكانها واطلع
+    if (!this.isPocketed) {
+        this.position.y = 0;
+        this.fallingSpeedY = 0;
+        this.phase = 'idle';
+    } else {
+        // كود الهبوط الطبيعي طول ما هي ساقطة فعلياً
+        this.fallingSpeedY += 9.81 * dt;
+        this.position.y -= this.fallingSpeedY * dt;
+
+       const safeLimit = -(this.radius*1.93);
+        if(this.position.y< safeLimit){
+            this.position.y = safeLimit;
+            this.fallingSpeedY = 0;
+        }
+    }
+    return;
+}
+      
+        let speed = this.velocity.length();
+        let angularSpeed = this.angularVelocity.length();
+
+        // 🛑 الحل الحاسم: إذا كانت السرعة الخطية أو الدوران الزاوي صغيرين جداً، نوقف الكرة تماماً وقسرياً
+        if (speed <= STOP_THRESHOLD && angularSpeed <= 0.2) {
             this.velocity.set(0, 0, 0);
             this.angularVelocity.set(0, 0, 0);
             this.phase = 'idle';
-            console.log(`[STOP] Ball ID: ${this.id} stopped.`);
-        } else {
-            this.position.x += this.velocity.x * dt;
-            this.position.z += this.velocity.z * dt;
+            return; // الخروج الفوري وإلغاء أي حسابات أخرى لهذا الإطار
         }
-    }
-} 
 
+        this.checkPockets();
 
-export class BilliardsPhysicsEngine {
-    constructor() {
-        this.balls = []; // مصفوفة لتخزين الكرات الـ 16 داخل نظام الطاولة
-    }
+        if (this.phase === 'SLIDING') {
+            this.t_sliding += dt;
 
-    // دالة تسجيل كرات اللعبة داخل المحرك
-    registerBall(ball) {
-        this.balls.push(ball);
-    }
+            const gravity = 9.81;
+            const frictionMagnitude = this.frictionCoefficient * this.mass * gravity;
+            const frictionForce = this.velocity.clone().normalize().multiplyScalar(-frictionMagnitude);
+            const dragForce = this.computeDragForce();
 
-    /**
-     * تحديث الخطوة الزمنية للنظام بالكامل ومعالجة الاصطدامات المائلة البينية
-     * @param {number} dt - فارق التوقيت الزمني (Delta Time)
-     */
-    updateEngine(dt) {
-        if (!dt || dt <= 0) return;
+            const totalForce = frictionForce.add(dragForce);
+            const acceleration = totalForce.clone().divideScalar(this.mass);
+            this.velocity.add(acceleration.multiplyScalar(dt));
 
-        // 1. فحص ومعالجة الاصطدام المائل غير المرن التام ثنائي الأبعاد بين الكرات الملامسة
-        for (let i = 0; i < this.balls.length; i++) {
-            for (let j = i + 1; j < this.balls.length; j++) {
-                handleBallBallCollision(this.balls[i], this.balls[j]);
+            const radiusVector = new THREE.Vector3(0, -this.radius, 0);
+            const torque = radiusVector.cross(totalForce);
+            const angularAcceleration = torque.clone().divideScalar(this.inertia);
+            this.angularVelocity.add(angularAcceleration.multiplyScalar(dt));
+
+            const v_mag = this.velocity.length();
+            const omega_mag = Math.sqrt(this.angularVelocity.x * this.angularVelocity.x + this.angularVelocity.z * this.angularVelocity.z);
+
+            if (this.t_sliding >= this.t_rolling_limit || Math.abs(v_mag - this.radius * omega_mag) < 0.05) {
+                this.phase = 'ROLLING';
             }
+
+        } else if (this.phase === 'ROLLING') {
+            const gravity = 9.81;
+            const rollingFrictionMag = this.rollingFrictionCoefficient * this.mass * gravity;
+            const rollingFrictionForce = this.velocity.clone().normalize().multiplyScalar(-rollingFrictionMag);
+            const dragForce = this.computeDragForce();
+
+            const totalForce = rollingFrictionForce.add(dragForce);
+            const acceleration = totalForce.clone().divideScalar(this.mass);
+            this.velocity.add(acceleration.multiplyScalar(dt));
+
+            const v_mag = this.velocity.length();
+            const direction = this.velocity.clone().normalize();
+            this.angularVelocity.x = -direction.z * (v_mag / this.radius);
+            this.angularVelocity.z = direction.x * (v_mag / this.radius);
         }
 
-        // 2. تسيير وتحديث حركة كل كرة فردية خطوة بخطوة بناءً على الاحتكاك المتجهي
-        for (let ball of this.balls) {
-            ball.update(dt);
-        }
+        // تحديث الموضع الأفقي
+        this.position.x += this.velocity.x * dt;
+        this.position.z += this.velocity.z * dt;
     }
 }
