@@ -209,12 +209,13 @@ function spawnBall(x, z, textureUrl = null) {
 
     return pBall;
 }
-
 // ==========================================================
 // 7. رصف الكرات وتوزيعها
 // ==========================================================
+
+// جعل الكرة البيضاء ساكنة تماماً عند تشغيل المشروع (تنتظر ضربتكِ)
 const whiteBallPhysics = spawnBall(0.0, 1.5, null);
-whiteBallPhysics.velocity.set(1.5, 0, -3.0);
+whiteBallPhysics.velocity.set(0, 0, 0);
 
 const spacingX = ballRadius * 2.05;
 const spacingZ = ballRadius * 1.74;
@@ -228,6 +229,35 @@ spawnBall(-spacingX, -1.0 - (spacingZ * 2), ballTexturesMap['04']);
 spawnBall( 0.0,      -1.0 - (spacingZ * 2), ballTexturesMap['08']);
 spawnBall( spacingX,  -1.0 - (spacingZ * 2), ballTexturesMap['05']);
 
+
+// 🎯 التحكم بمعطيات الضربة (عدّلي هذه الأرقام هنا فقط لتجربة تأثيرات مختلفة)
+const myShotSettings = {
+    speed: 4.5,       // السرعة الابتدائية (متر/ثانية) - يمكنكِ زيادتها أو إنقاصها
+    topSpin: 15.0,    // الدوران الأمامي (أوميغا) - ضعي 0 إذا لم تريدي دوران
+    backSpin: 0.0,    // الدوران الخلفي (أوميغا)
+    sideSpin: 0.0,    // الدوران الجانبي
+    dirX: 0.1,        // اتجاه الضربة على محور X (يمين/يسار)
+    dirZ: -1.0        // اتجاه الضربة للأمام نحو الكرات
+};
+
+// ⌨️ الاستماع لـ زر المسافة (Spacebar) لإطلاق الكرة في أي وقت
+window.addEventListener('keydown', (event) => {
+    if (event.code === 'Space') {
+        // التأكد أن الكرة واقفة حالياً لكي لا يتم ضربها وهي تتحرك
+        if (whiteBallPhysics.phase === 'idle') {
+            console.log("🚀 تم إطلاق الكرة البيضاء بالمعطيات المحددة!");
+
+            whiteBallPhysics.receiveShot(
+                myShotSettings.speed,
+                myShotSettings.topSpin,
+                myShotSettings.backSpin,
+                myShotSettings.sideSpin,
+                myShotSettings.dirX,
+                myShotSettings.dirZ
+            );
+        }
+    }
+});
 // ==========================================================
 // 8. حلقة التحريك والرسم المتواصل
 // ==========================================================

@@ -948,8 +948,9 @@ function spawnBall(x, z, textureUrl = null) {
 // ==========================================================
 // 7. رصف الكرات وتوزيعها
 // ==========================================================
+// جعل الكرة البيضاء ساكنة تماماً عند تشغيل المشروع (تنتظر ضربتكِ)
 const whiteBallPhysics = spawnBall(0.0, 1.5, null);
-whiteBallPhysics.velocity.set(1.5, 0, -3);
+whiteBallPhysics.velocity.set(0, 0, 0);
 const spacingX = ballRadius * 2.05;
 const spacingZ = ballRadius * 1.74;
 spawnBall(0.0, -1, ballTexturesMap['01']);
@@ -958,6 +959,25 @@ spawnBall(spacingX / 2, -1 - spacingZ, ballTexturesMap['03']);
 spawnBall(-spacingX, -1 - spacingZ * 2, ballTexturesMap['04']);
 spawnBall(0.0, -1 - spacingZ * 2, ballTexturesMap['08']);
 spawnBall(spacingX, -1 - spacingZ * 2, ballTexturesMap['05']);
+// 🎯 التحكم بمعطيات الضربة (عدّلي هذه الأرقام هنا فقط لتجربة تأثيرات مختلفة)
+const myShotSettings = {
+    speed: 4.5,
+    topSpin: 15.0,
+    backSpin: 0.0,
+    sideSpin: 0.0,
+    dirX: 0.1,
+    dirZ: -1 // اتجاه الضربة للأمام نحو الكرات
+};
+// ⌨️ الاستماع لـ زر المسافة (Spacebar) لإطلاق الكرة في أي وقت
+window.addEventListener('keydown', (event)=>{
+    if (event.code === 'Space') // التأكد أن الكرة واقفة حالياً لكي لا يتم ضربها وهي تتحرك
+    {
+        if (whiteBallPhysics.phase === 'idle') {
+            console.log("\uD83D\uDE80 \u062A\u0645 \u0625\u0637\u0644\u0627\u0642 \u0627\u0644\u0643\u0631\u0629 \u0627\u0644\u0628\u064A\u0636\u0627\u0621 \u0628\u0627\u0644\u0645\u0639\u0637\u064A\u0627\u062A \u0627\u0644\u0645\u062D\u062F\u062F\u0629!");
+            whiteBallPhysics.receiveShot(myShotSettings.speed, myShotSettings.topSpin, myShotSettings.backSpin, myShotSettings.sideSpin, myShotSettings.dirX, myShotSettings.dirZ);
+        }
+    }
+});
 // ==========================================================
 // 8. حلقة التحريك والرسم المتواصل
 // ==========================================================
@@ -54813,6 +54833,10 @@ class PhysicalBall {
         }
     }
     update(dt) {
+        // / إذا كانت الكرة ساكنة تماماً وليست في الفوهة، لا تفعل شيئاً واخرج فوراً
+        if (this.phase === 'idle') return;
+        // معالجة حركة السقوط العمودي لأسفل داخل الحفرة
+        this.phase;
         // معالجة حركة السقوط العمودي لأسفل داخل الحفرة
         // معالجة حركة السقوط داخل الحفرة والاختفاء المباشر
         // معالجة حركة السقوط العمودي لأسفل داخل الحفرة
@@ -54824,12 +54848,13 @@ class PhysicalBall {
             return;
         }
         let speed = this.velocity.length();
-        // التوقف الحازم لمنع الانزلاق اللانهائي المجهري
-        if (speed <= STOP_THRESHOLD) {
+        let angularSpeed = this.angularVelocity.length();
+        // 🛑 الحل الحاسم: إذا كانت السرعة الخطية أو الدوران الزاوي صغيرين جداً، نوقف الكرة تماماً وقسرياً
+        if (speed <= STOP_THRESHOLD && angularSpeed <= 0.2) {
             this.velocity.set(0, 0, 0);
             this.angularVelocity.set(0, 0, 0);
             this.phase = 'idle';
-            return;
+            return; // الخروج الفوري وإلغاء أي حسابات أخرى لهذا الإطار
         }
         this.checkPockets();
         if (this.phase === 'SLIDING') {
@@ -54938,6 +54963,7 @@ parcelHelpers.export(exports, "BALL_DIAMETER", ()=>BALL_DIAMETER);
 const RESTITUTION = 0.93;
 const SURFACE_FRICTION = 0.06;
 const BALL_DIAMETER = 0.057 * 2.5; // تعديل القطر ليصبح 0.1425 متر متوافقاً مع حجم الرسوميات الجديد
+const STOP_THRESHOLD = 0.05;
 function decomposeVelocity(velocity, nx, nz, tx, tz) {
     return {
         vn: velocity.x * nx + velocity.z * nz,
@@ -55002,6 +55028,9 @@ function resolveCollision(ballA, ballB) {
         ballB.position.x += correctionX;
         ballB.position.z += correctionZ;
     }
+    // 🎯 الحل السحري: تفعيل حالة الحركة للكرات المصدومة إذا كانت ساكنة
+    if (ballA.velocity.length() > STOP_THRESHOLD && ballA.phase === 'idle') ballA.phase = 'ROLLING';
+    if (ballB.velocity.length() > STOP_THRESHOLD && ballB.phase === 'idle') ballB.phase = 'ROLLING';
 }
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT"}],"9RKaH":[function(require,module,exports,__globalThis) {

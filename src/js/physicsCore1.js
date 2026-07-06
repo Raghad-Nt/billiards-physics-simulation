@@ -122,6 +122,13 @@ export class PhysicalBall {
     }
 
     update(dt) {
+        // / إذا كانت الكرة ساكنة تماماً وليست في الفوهة، لا تفعل شيئاً واخرج فوراً
+        if (this.phase === 'idle') return;
+
+        // معالجة حركة السقوط العمودي لأسفل داخل الحفرة
+        if (this.phase === 'POCKETED') {
+
+        }
         // معالجة حركة السقوط العمودي لأسفل داخل الحفرة
         // معالجة حركة السقوط داخل الحفرة والاختفاء المباشر
         // معالجة حركة السقوط العمودي لأسفل داخل الحفرة
@@ -133,13 +140,14 @@ export class PhysicalBall {
             return;
         }
         let speed = this.velocity.length();
+        let angularSpeed = this.angularVelocity.length();
 
-        // التوقف الحازم لمنع الانزلاق اللانهائي المجهري
-        if (speed <= STOP_THRESHOLD) {
+        // 🛑 الحل الحاسم: إذا كانت السرعة الخطية أو الدوران الزاوي صغيرين جداً، نوقف الكرة تماماً وقسرياً
+        if (speed <= STOP_THRESHOLD && angularSpeed <= 0.2) {
             this.velocity.set(0, 0, 0);
             this.angularVelocity.set(0, 0, 0);
             this.phase = 'idle';
-            return;
+            return; // الخروج الفوري وإلغاء أي حسابات أخرى لهذا الإطار
         }
 
         this.checkPockets();

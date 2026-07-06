@@ -1,6 +1,7 @@
 export const RESTITUTION = 0.93;
 export const SURFACE_FRICTION = 0.06;
 export const BALL_DIAMETER = 0.057 * 2.5; // تعديل القطر ليصبح 0.1425 متر متوافقاً مع حجم الرسوميات الجديد
+const STOP_THRESHOLD = 0.05;
 /**
  * يفكك متجه السرعة لكرة معينة إلى مركبتين: ناظمية (n) ومماسية (t)
  * @returns {{vn: number, vt: number}}
@@ -95,4 +96,12 @@ export function resolveCollision(ballA, ballB) {
         ballB.position.x += correctionX;
         ballB.position.z += correctionZ;
     }
+// 🎯 الحل السحري: تفعيل حالة الحركة للكرات المصدومة إذا كانت ساكنة
+    if (ballA.velocity.length() > STOP_THRESHOLD && ballA.phase === 'idle') {
+        ballA.phase = 'ROLLING';
+    }
+    if (ballB.velocity.length() > STOP_THRESHOLD && ballB.phase === 'idle') {
+        ballB.phase = 'ROLLING';
+    }
+
 }
