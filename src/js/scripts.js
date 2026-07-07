@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { PhysicalBall } from './physicsCore1.js';
 import { checkTableBoundaries, checkBallCollisions } from './physics.js';
+import GUI from 'lil-gui';
+import { RESTITUTION } from './resolveCollision.js';
 
 // 1. مصفوفات لتخزين الكرات (الفيزيائية والرسومية)
 const physicalBalls = [];
@@ -230,8 +232,104 @@ spawnBall( 0.0,      -1.0 - (spacingZ * 2), ballTexturesMap['08']);
 spawnBall( spacingX,  -1.0 - (spacingZ * 2), ballTexturesMap['05']);
 
 
-// 🎯 التحكم بمعطيات الضربة (عدّلي هذه الأرقام هنا فقط لتجربة تأثيرات مختلفة)
+
+// ==========================================================
+// 7.5 إعداد لوحة التحكم الذكية (Control Panel)
+// ==========================================================
+
 const myShotSettings = {
+    speed: 4.5,       
+    topSpin: 15.0,    
+    backSpin: 0.0,    
+    sideSpin: 0.0,    
+    dirX: 0.1,        
+    dirZ: -1.0,
+    restitution: 0.93, 
+
+    currentSpeed: 0,
+    currentAngularSpeed:0,
+    currentPhase: 'idle',
+    
+    fireShot: function() {
+        if (whiteBallPhysics.phase === 'idle' && !whiteBallPhysics.isPocketed) {
+            console.log(" تم إطلاق الكرة البيضاء!");
+            whiteBallPhysics.receiveShot(
+                myShotSettings.speed,
+                myShotSettings.topSpin,
+                myShotSettings.backSpin,
+                myShotSettings.sideSpin,
+                myShotSettings.dirX,
+                myShotSettings.dirZ
+            );
+        }
+    },
+
+    resetPocketedBalls: function() {
+        physicalBalls.forEach((pBall, index) => {
+            if (pBall.isPocketed) {
+                pBall.isPocketed = false;
+                pBall.phase = 'idle';
+                pBall.fallingSpeedY = 0;
+                pBall.velocity.set(0, 0, 0);
+                pBall.angularVelocity.set(0, 0, 0);
+                
+                if (pBall.id === 0) {
+                    pBall.position.set(0.0, 0, 1.5); 
+                } else {
+                    pBall.position.set((Math.random() - 0.5) * 0.5, 0, -1.0 - (Math.random() * 0.5)); 
+                }
+                
+                if (visualBalls[index]) {
+                    visualBalls[index].visible = true;
+                    visualBalls[index].position.set(pBall.position.x, surfaceY + ballRadius, pBall.position.z);
+
+                    scene.add(vBall);
+                }
+            }
+        });
+    }
+};
+
+// إنشاء اللوحة وتحديد محتواها
+const gui = new GUI({ title: ' لوحة تحكم البلياردو' });
+
+// المجلد الرابع: مراقبة المتغيرات لايف أثناء الحركة
+const monitorFolder = gui.addFolder('📊 مراقبة حركة الكرة الحالية');
+// إضافة الأدوات مع ميزة .listen() وجعلها للقراءة فقط باستخدام .disable()
+monitorFolder.add(myShotSettings, 'currentSpeed').name('السرعة الخطية الحالية').listen().disable();
+monitorFolder.add(myShotSettings, 'currentAngularSpeed').name('السرعة الزاوية (الدوران)').listen().disable();
+monitorFolder.add(myShotSettings, 'currentPhase').name('حالة الكرة الحالية').listen().disable();
+
+const shotFolder = gui.addFolder('إعدادات الضربة');
+shotFolder.add(myShotSettings, 'speed', 1, 15, 0.1).name('السرعة (م/ث)');
+shotFolder.add(myShotSettings, 'dirX', -1, 1, 0.05).name(' X الاتجاه ');
+shotFolder.add(myShotSettings, 'dirZ', -1, 0, 0.05).name(' Z الاتجاه ');
+
+const spinFolder = gui.addFolder('تأثيرات الدوران');
+spinFolder.add(myShotSettings, 'topSpin', 0, 40, 1).name('TopSpin');
+spinFolder.add(myShotSettings, 'backSpin', 0, 40, 1).name('BackSpin');
+spinFolder.add(myShotSettings, 'sideSpin', -20, 20, 1).name('SideSpin');
+
+const physicsFolder = gui.addFolder('فيزياء المحاكاة لايف');
+physicsFolder.add(myShotSettings, 'restitution', 0.1, 1.0, 0.01)
+    .name('(e)معامل الارتداد ')
+    .onChange(value => 
+         {
+            module.RESTITUTION = value;
+        });
+    
+
+gui.add(myShotSettings, 'fireShot').name(' إطلاق الكرة البيضاء');
+gui.add(myShotSettings, 'resetPocketedBalls').name(' إعادة الكرات الساقطة');
+
+window.addEventListener('keydown', (event) => {
+    if (event.code === 'Space') {
+        myShotSettings.fireShot();
+    }
+});
+
+// 🎯 التحكم بمعطيات الضربة (عدّلي هذه الأرقام هنا فقط لتجربة تأثيرات مختلفة)
+/*const myShotSettings = {
     speed: 4.5,       // السرعة الابتدائية (متر/ثانية) - يمكنكِ زيادتها أو إنقاصها
     topSpin: 15.0,    // الدوران الأمامي (أوميغا) - ضعي 0 إذا لم تريدي دوران
     backSpin: 0.0,    // الدوران الخلفي (أوميغا)
@@ -257,7 +355,7 @@ window.addEventListener('keydown', (event) => {
             );
         }
     }
-});
+});*/
 // ==========================================================
 // 8. حلقة التحريك والرسم المتواصل
 // ==========================================================
@@ -269,6 +367,11 @@ function animate() {
     let dt = clock.getDelta();
     dt = Math.min(dt, 0.1);
     checkBallCollisions(physicalBalls);
+
+    //الاسطر الثلاث للمراقبة
+myShotSettings.currentSpeed = whiteBallPhysics.velocity.length();
+myShotSettings.currentAngularSpeed = whiteBallPhysics.angularVelocity.length();
+myShotSettings.currentPhase = whiteBallPhysics.phase;
 
     for (let i = 0; i < physicalBalls.length; i++) {
         const pBall = physicalBalls[i];

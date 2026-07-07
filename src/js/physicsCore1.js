@@ -132,13 +132,31 @@ export class PhysicalBall {
         // معالجة حركة السقوط العمودي لأسفل داخل الحفرة
         // معالجة حركة السقوط داخل الحفرة والاختفاء المباشر
         // معالجة حركة السقوط العمودي لأسفل داخل الحفرة
-        if (this.phase === 'POCKETED') {
-            this.velocity.set(0, 0, 0);
-            this.angularVelocity.set(0, 0, 0);
-            this.fallingSpeedY += 9.81 * dt; // تسارع الجاذبية لأسفل
-            this.position.y -= this.fallingSpeedY * dt; // الهبوط تدريجياً
-            return;
+
+        //  عدلي هذا الجزء فقط بـ PhysicsCore.js:
+if (this.phase === 'POCKETED') {
+    this.velocity.set(0, 0, 0);
+    this.angularVelocity.set(0, 0, 0);
+    
+    // إذا الكرة ليست مخفية ورجعناها بالطاقة (يعني isPocketed صارت false)، رجّع الـ y مكانها واطلع
+    if (!this.isPocketed) {
+        this.position.y = 0;
+        this.fallingSpeedY = 0;
+        this.phase = 'idle';
+    } else {
+        // كود الهبوط الطبيعي طول ما هي ساقطة فعلياً
+        this.fallingSpeedY += 9.81 * dt;
+        this.position.y -= this.fallingSpeedY * dt;
+
+       const safeLimit = -(this.radius*1.93);
+        if(this.position.y< safeLimit){
+            this.position.y = safeLimit;
+            this.fallingSpeedY = 0;
         }
+    }
+    return;
+}
+      
         let speed = this.velocity.length();
         let angularSpeed = this.angularVelocity.length();
 
