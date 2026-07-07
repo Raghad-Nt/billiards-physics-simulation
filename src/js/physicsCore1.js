@@ -122,54 +122,46 @@ export class PhysicalBall {
     }
 
     update(dt) {
-        // / إذا كانت الكرة ساكنة تماماً وليست في الفوهة، لا تفعل شيئاً واخرج فوراً
+        // 1. إذا كانت الكرة ساكنة تماماً وليست في الفوهة، لا تفعل شيئاً واخرج فوراً
         if (this.phase === 'idle') return;
 
-        // معالجة حركة السقوط العمودي لأسفل داخل الحفرة
+        // 2. معالجة حركة السقوط العمودي لأسفل داخل الحفرة (تم عزلها بالكامل في البداية)
         if (this.phase === 'POCKETED') {
+            this.velocity.set(0, 0, 0);
+            this.angularVelocity.set(0, 0, 0);
 
+            if (!this.isPocketed) {
+                this.position.y = 0;
+                this.fallingSpeedY = 0;
+                this.phase = 'idle';
+            } else {
+                this.fallingSpeedY += 9.81 * dt;
+                this.position.y -= this.fallingSpeedY * dt;
+
+                const safeLimit = -(this.radius * 1.93);
+                if (this.position.y < safeLimit) {
+                    this.position.y = safeLimit;
+                    this.fallingSpeedY = 0;
+                }
+            }
+            return; // الخروج الفوري لضمان عدم تداخل شروط التوقف العادية مع السقوط
         }
-        // معالجة حركة السقوط العمودي لأسفل داخل الحفرة
-        // معالجة حركة السقوط داخل الحفرة والاختفاء المباشر
-        // معالجة حركة السقوط العمودي لأسفل داخل الحفرة
 
-        //  عدلي هذا الجزء فقط بـ PhysicsCore.js:
-if (this.phase === 'POCKETED') {
-    this.velocity.set(0, 0, 0);
-    this.angularVelocity.set(0, 0, 0);
-    
-    // إذا الكرة ليست مخفية ورجعناها بالطاقة (يعني isPocketed صارت false)، رجّع الـ y مكانها واطلع
-    if (!this.isPocketed) {
-        this.position.y = 0;
-        this.fallingSpeedY = 0;
-        this.phase = 'idle';
-    } else {
-        // كود الهبوط الطبيعي طول ما هي ساقطة فعلياً
-        this.fallingSpeedY += 9.81 * dt;
-        this.position.y -= this.fallingSpeedY * dt;
-
-       const safeLimit = -(this.radius*1.93);
-        if(this.position.y< safeLimit){
-            this.position.y = safeLimit;
-            this.fallingSpeedY = 0;
-        }
-    }
-    return;
-}
-      
+        // 3. شروط التوقف الحازمة (تُطبق فقط إذا كانت الكرة فوق الطاولة ولم تسقط بعد)
         let speed = this.velocity.length();
         let angularSpeed = this.angularVelocity.length();
 
-        // 🛑 الحل الحاسم: إذا كانت السرعة الخطية أو الدوران الزاوي صغيرين جداً، نوقف الكرة تماماً وقسرياً
-        if (speed <= STOP_THRESHOLD && angularSpeed <= 0.2) {
+        if (speed < 0.01 || (speed <= STOP_THRESHOLD && angularSpeed <= 0.2)) {
             this.velocity.set(0, 0, 0);
             this.angularVelocity.set(0, 0, 0);
-            this.phase = 'idle';
-            return; // الخروج الفوري وإلغاء أي حسابات أخرى لهذا الإطار
+            this.phase = 'idle'; // عودة آمنة للسكون فوق الطاولة
+            return;
         }
 
+        // 4. فحص الثقوب أثناء الحركة الطبيعية للكرة
         this.checkPockets();
 
+        // 5. حسابات الحركة الفيزيائية المعتادة (Sliding / Rolling)
         if (this.phase === 'SLIDING') {
             this.t_sliding += dt;
 

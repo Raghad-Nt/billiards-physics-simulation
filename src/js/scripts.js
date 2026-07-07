@@ -238,21 +238,22 @@ spawnBall( spacingX,  -1.0 - (spacingZ * 2), ballTexturesMap['05']);
 // ==========================================================
 
 const myShotSettings = {
-    speed: 4.5,       
-    topSpin: 15.0,    
-    backSpin: 0.0,    
-    sideSpin: 0.0,    
-    dirX: 0.1,        
+    speed: 4.5,
+    topSpin: 15.0,
+    backSpin: 0.0,
+    sideSpin: 0.0,
+    dirX: 0.1,
     dirZ: -1.0,
-    restitution: 0.93, 
+    restitution: 0.93,
 
     currentSpeed: 0,
     currentAngularSpeed:0,
     currentPhase: 'idle',
-    
+
     fireShot: function() {
-        if (whiteBallPhysics.phase === 'idle' && !whiteBallPhysics.isPocketed) {
-            console.log(" تم إطلاق الكرة البيضاء!");
+        if ((whiteBallPhysics.phase === 'idle' || whiteBallPhysics.velocity.length() < 0.01) && !whiteBallPhysics.isPocketed) {
+            console.log("🚀 تم الإطلاق القسري المضمون للكرة البيضاء!");
+
             whiteBallPhysics.receiveShot(
                 myShotSettings.speed,
                 myShotSettings.topSpin,
@@ -261,6 +262,9 @@ const myShotSettings = {
                 myShotSettings.dirX,
                 myShotSettings.dirZ
             );
+
+            // نقوم بإجبار الحالة على التغير فوراً لكي لا تضرب مرتين في نفس الوقت
+            whiteBallPhysics.phase = 'SLIDING';
         }
     },
 
@@ -272,18 +276,18 @@ const myShotSettings = {
                 pBall.fallingSpeedY = 0;
                 pBall.velocity.set(0, 0, 0);
                 pBall.angularVelocity.set(0, 0, 0);
-                
+
                 if (pBall.id === 0) {
-                    pBall.position.set(0.0, 0, 1.5); 
+                    pBall.position.set(0.0, 0, 1.5);
                 } else {
-                    pBall.position.set((Math.random() - 0.5) * 0.5, 0, -1.0 - (Math.random() * 0.5)); 
+                    pBall.position.set((Math.random() - 0.5) * 0.5, 0, -1.0 - (Math.random() * 0.5));
                 }
-                
+
                 if (visualBalls[index]) {
                     visualBalls[index].visible = true;
                     visualBalls[index].position.set(pBall.position.x, surfaceY + ballRadius, pBall.position.z);
 
-                    scene.add(vBall);
+                    scene.add(visualBalls[index]);
                 }
             }
         });
@@ -313,11 +317,11 @@ spinFolder.add(myShotSettings, 'sideSpin', -20, 20, 1).name('SideSpin');
 const physicsFolder = gui.addFolder('فيزياء المحاكاة لايف');
 physicsFolder.add(myShotSettings, 'restitution', 0.1, 1.0, 0.01)
     .name('(e)معامل الارتداد ')
-    .onChange(value => 
+    .onChange(value =>
          {
             module.RESTITUTION = value;
         });
-    
+
 
 gui.add(myShotSettings, 'fireShot').name(' إطلاق الكرة البيضاء');
 gui.add(myShotSettings, 'resetPocketedBalls').name(' إعادة الكرات الساقطة');
